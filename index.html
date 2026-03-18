@@ -618,24 +618,30 @@ function hideLoader(){ const el=document.getElementById('syncLoader');if(el)el.s
 function apiGet(action, params={}){
   return new Promise((resolve, reject)=>{
     const cbName = '_cb_'+Math.random().toString(36).substr(2,8);
+    const scriptId = '_jsonpGet_'+cbName;
     const qs = new URLSearchParams({action, callback: cbName, ...params}).toString();
 
     const timeout = setTimeout(()=>{
       delete window[cbName];
-      document.getElementById('_jsonpScript')?.remove();
+      document.getElementById(scriptId)?.remove();
       reject(new Error('JSONP timeout'));
     }, 12000);
 
     window[cbName] = (data)=>{
       clearTimeout(timeout);
       delete window[cbName];
-      document.getElementById('_jsonpScript')?.remove();
+      document.getElementById(scriptId)?.remove();
       resolve(data);
     };
     const s = document.createElement('script');
-    s.id  = '_jsonpScript';
+    s.id  = scriptId;
     s.src = `${GAS_URL}?${qs}`;
-    s.onerror = ()=>{ clearTimeout(timeout); delete window[cbName]; reject(new Error('JSONP error')); };
+    s.onerror = ()=>{
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.getElementById(scriptId)?.remove();
+      reject(new Error('JSONP error'));
+    };
     document.head.appendChild(s);
   });
 }
@@ -643,25 +649,31 @@ function apiGet(action, params={}){
 function apiPost(action, body={}){
   return new Promise((resolve, reject)=>{
     const cbName = '_cb_'+Math.random().toString(36).substr(2,8);
+    const scriptId = '_jsonpPost_'+cbName;
     const payload = encodeURIComponent(JSON.stringify({action,...body}));
     const qs = `action=${action}&payload=${payload}&callback=${cbName}`;
 
     const timeout = setTimeout(()=>{
       delete window[cbName];
-      document.getElementById('_jsonpScript2')?.remove();
+      document.getElementById(scriptId)?.remove();
       reject(new Error('JSONP POST timeout'));
     }, 12000);
 
     window[cbName] = (data)=>{
       clearTimeout(timeout);
       delete window[cbName];
-      document.getElementById('_jsonpScript2')?.remove();
+      document.getElementById(scriptId)?.remove();
       resolve(data);
     };
     const s = document.createElement('script');
-    s.id  = '_jsonpScript2';
+    s.id  = scriptId;
     s.src = `${GAS_URL}?${qs}`;
-    s.onerror = ()=>{ clearTimeout(timeout); delete window[cbName]; reject(new Error('JSONP POST error')); };
+    s.onerror = ()=>{
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.getElementById(scriptId)?.remove();
+      reject(new Error('JSONP POST error'));
+    };
     document.head.appendChild(s);
   });
 }

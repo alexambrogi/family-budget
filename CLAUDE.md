@@ -4,11 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A single-page family budget management web app (Italian UI) with no build tools. The entire application — HTML, CSS, and JavaScript — lives in `index.html`. To run it, just open `index.html` in a browser.
+A single-page family budget management web app (Italian UI) with no build tools. To run either version, just open the file in a browser.
+
+| File | Theme |
+|---|---|
+| `index.html` | Dark theme only |
+| `index_white.html` | Light/dark switchable (default light) |
 
 ## Architecture
 
-**Single-file SPA:** All application logic, styles, and markup are embedded in `index.html` (~630 lines).
+**Single-file SPA:** All application logic, styles, and markup are embedded in each HTML file (~640 lines).
 
 **Backend:** Google Apps Script (GAS) acts as a REST-like API backed by Google Sheets. The endpoint URL is hardcoded in `index.html`. API calls use `apiGet(action, params)` and `apiPost(action, payload)`.
 
@@ -19,6 +24,7 @@ A single-page family budget management web app (Italian UI) with no build tools.
 | `fb_tipi` | Expense categories (id, nome, colore, emoji) |
 | `fb_spese2` | Expenses keyed by year |
 | `fb_pw_cache` | Cached password hash |
+| `fb_theme` | Active theme (`light` or `dark`), used by `index_white.html` |
 
 **Expense record shape:**
 ```js
@@ -38,6 +44,10 @@ A single-page family budget management web app (Italian UI) with no build tools.
 ## Session Management
 
 Login is validated against a password fetched from GAS (`getPassword` action). Sessions are stored in `sessionStorage` and expire after 24 hours. Key functions: `checkSession()`, `saveSession()`, `clearSession()`, `doLogin()`, `doLogout()`.
+
+## Theme Switching (`index_white.html` only)
+
+`index_white.html` supports light/dark switching via a dropdown in the topbar. The active theme is stored in `localStorage` (`fb_theme`) and applied as `data-theme="light|dark"` on `<html>`. CSS variables are defined in `:root` (light defaults) and overridden by `[data-theme="dark"]`. Key function: `setTheme(t)`. When editing CSS colors, always update both `:root` and `[data-theme="dark"]` blocks to keep the two themes in sync.
 
 ## Charts
 

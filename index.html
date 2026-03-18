@@ -491,18 +491,23 @@ function apiPost(action, body={}){
 // ── SAVE: scrive su Sheets (+ localStorage come cache) ──
 async function save(){
   if(_saving) return;
-  _saving=true;
-  // cache locale sempre aggiornata
+  _saving = true;
   localStorage.setItem('fb_tipi',   JSON.stringify(tipi));
   localStorage.setItem('fb_spese2', JSON.stringify(dbSpese));
-  if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){_saving=false;return;}
+  if(GAS_URL === 'INCOLLA_QUI_URL_APPS_SCRIPT'){ _saving=false; return; }
   showLoader('Salvataggio...');
-  try{
-    await apiPost('saveAll',{tipi, spese: dbSpese});
+  try {
+    // Manda solo tipi + spese dell'anno corrente (non tutto lo storico)
+    const payload = {
+      tipi,
+      spese: { [currentYear]: dbSpese[currentYear] || [] }
+    };
+    await apiPost('saveAll', payload);
     toast('☁️ Salvato su Google Sheets');
-  }catch(e){
+  } catch(e) {
+    console.error('Errore salvataggio:', e);
     toast('⚠️ Errore salvataggio remoto — dati in cache locale','var(--red)');
-  }finally{ hideLoader(); _saving=false; }
+  } finally { hideLoader(); _saving = false; }
 }
 
 // ── LOAD: legge da Sheets, fallback su localStorage ──────

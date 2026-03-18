@@ -353,7 +353,7 @@ function unlockApp(){
   loadData().then(()=>{initTipoSelects();renderAll();});
 }
 function doLogout(){if(!confirm('Vuoi uscire?'))return;clearSession();location.reload();}
-
+ 
 // ── API ──
 function apiGet(action,params={}){
   return new Promise((resolve,reject)=>{

@@ -18,6 +18,57 @@
 html{-webkit-text-size-adjust:100%}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
+/* ══════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+}
+.login-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:2.5rem 2rem;
+  width:100%;max-width:380px;
+  text-align:center;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+}
+.login-logo{
+  font-family:'Playfair Display',serif;
+  font-size:1.6rem;font-weight:900;
+  color:var(--accent);
+  margin-bottom:.3rem;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+}
+.login-logo em{color:var(--text);font-style:normal}
+.login-sub{font-size:.82rem;color:var(--muted);margin-bottom:2rem}
+.login-label{font-size:.78rem;color:var(--muted);text-align:left;margin-bottom:.4rem;display:block}
+.login-input{
+  width:100%;background:var(--surface2);
+  border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:.7rem 1rem;font-size:1rem;
+  outline:none;transition:border-color .2s;
+  margin-bottom:1.2rem;letter-spacing:.15em;
+}
+.login-input:focus{border-color:var(--accent)}
+.login-btn{
+  width:100%;background:var(--accent);color:#000;
+  border:none;border-radius:10px;padding:.75rem;
+  font-weight:700;font-size:.95rem;cursor:pointer;
+  transition:opacity .2s;
+}
+.login-btn:active{opacity:.8}
+.login-err{
+  font-size:.8rem;color:var(--red);
+  margin-top:.8rem;min-height:1.2rem;
+}
+.login-loading{font-size:.78rem;color:var(--muted);margin-top:.8rem}
+/* lucchetto animato */
+.lock-icon{font-size:2.2rem;margin-bottom:1rem;display:block}
+
 /* ── TOP BAR ── */
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);
   padding:0 1rem;height:56px;display:flex;align-items:center;gap:.6rem;
@@ -32,6 +83,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .year-btn:active{border-color:var(--accent);color:var(--accent)}
 .year-display{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
   color:var(--accent);min-width:48px;text-align:center}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  border-radius:8px;padding:4px 10px;font-size:.75rem;cursor:pointer;
+  display:flex;align-items:center;gap:.3rem;transition:all .2s;margin-left:.5rem}
+.logout-btn:active{border-color:var(--red);color:var(--red)}
 
 /* ── NAV TABS ── */
 .nav-tabs-custom{background:var(--surface);border-bottom:1px solid var(--border);
@@ -185,6 +240,37 @@ canvas{max-height:280px}
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════
+     SCHERMATA DI LOGIN
+═══════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="lock-icon">🔒</span>
+    <div class="login-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M16 14h.01"/></svg>
+      Family<em>Budget</em>
+    </div>
+    <div class="login-sub">Inserisci la password per accedere</div>
+    <label class="login-label">Password</label>
+    <input
+      type="password"
+      id="loginInput"
+      class="login-input"
+      placeholder="••••••••"
+      autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()"
+    />
+    <button class="login-btn" onclick="doLogin()">🔓 Accedi</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-loading" id="loginLoading" style="display:none">⏳ Verifica in corso...</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP (nascosta finché non si fa login)
+═══════════════════════════════════════ -->
+<div id="appContent" style="display:none">
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="brand">
@@ -196,6 +282,7 @@ canvas{max-height:280px}
     <div class="year-display" id="yearDisplay">—</div>
     <button class="year-btn" onclick="changeYear(+1)" title="Anno successivo">&#8250;</button>
   </div>
+  <button class="logout-btn" onclick="doLogout()" title="Esci">🔒 Esci</button>
 </div>
 
 <!-- NAV TABS -->
@@ -358,8 +445,6 @@ canvas{max-height:280px}
   </div>
   <div class="card-dark mt-3">
     <div class="sec-title">🗄️ Gestione Dati</div>
-
-    <!-- BACKUP / RIPRISTINO JSON -->
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.1rem;margin-bottom:1rem">
       <div style="font-size:.8rem;font-weight:600;color:var(--accent);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.6px">💾 Backup &amp; Ripristino</div>
       <div style="font-size:.8rem;color:var(--muted);margin-bottom:.9rem">
@@ -373,8 +458,6 @@ canvas{max-height:280px}
         </label>
       </div>
     </div>
-
-    <!-- ALTRE OPZIONI -->
     <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.6px">Altre opzioni</div>
     <div class="d-flex gap-2 flex-wrap">
       <button class="btn-ghost" onclick="esportaCSV()">⬇ Esporta CSV anno corrente</button>
@@ -386,22 +469,12 @@ canvas{max-height:280px}
 </div>
 </div>
 
+</div><!-- /appContent -->
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-
-// Aggiungi questo all'inizio del DOMContentLoaded
-const PIN = '1234'; // cambia con il tuo
-if(localStorage.getItem('fb_auth') !== PIN){
-  const inserito = prompt('🔒 Inserisci il PIN per accedere:');
-  if(inserito !== PIN){
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#f6c544;font-family:sans-serif;font-size:1.2rem">❌ Accesso negato</div>';
-    throw new Error('Accesso negato');
-  }
-  localStorage.setItem('fb_auth', PIN);
-}
-  
 // ══════════════════════════════════════════
 //  COSTANTI
 // ══════════════════════════════════════════
@@ -420,11 +493,10 @@ let charts      = {};
 
 // ════════════════════════════════════════════════════════
 //  ⚙️  CONFIGURAZIONE GOOGLE SHEETS
-//  Incolla qui l'URL del tuo Google Apps Script dopo il deploy
 // ════════════════════════════════════════════════════════
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzEYfksSd5RUcaIOmkuPl6u7KI033SbPHO_ZGYRqemHdIJBLrZeKQMTn3eiLBku6oQ_Uw/exec';
 
-// ── Tipi default (usati solo al primo avvio se Sheets è vuoto) ──
+// ── Tipi default ──
 const DEFAULT_TIPI = [
   {id:'t1',nome:'Casa',         emoji:'🏠',colore:'#4cbe8a',periodo:'mensile'},
   {id:'t2',nome:'Alimentari',   emoji:'🛒',colore:'#f6c544',periodo:'mensile'},
@@ -435,9 +507,9 @@ const DEFAULT_TIPI = [
   {id:'t7',nome:'Utenze',       emoji:'⚡',colore:'#4dd0e1',periodo:'bimestrale'},
 ];
 
-let tipi   = [];
+let tipi    = [];
 let dbSpese = {};
-let _saving = false;   // mutex per evitare salvataggi sovrapposti
+let _saving = false;
 
 function speseDiAnno(y){ return dbSpese[y]||[]; }
 function tutteLeSpese(){ return Object.values(dbSpese).flat(); }
@@ -447,7 +519,88 @@ function anniUsati(){
   return [...s].sort((a,b)=>a-b);
 }
 
-// ── Indicatore di caricamento ────────────────────────────
+// ════════════════════════════════════════════════════════
+//  🔐  LOGIN
+//  La password è nel foglio "Config" del tuo Google Sheet
+//  Riga 1: password | tuapassword
+// ════════════════════════════════════════════════════════
+const SESSION_KEY = 'fb_session_v1';
+
+function checkSession(){
+  // Controlla se la sessione è ancora valida (24 ore)
+  const raw = localStorage.getItem(SESSION_KEY);
+  if(!raw) return false;
+  try{
+    const {ts} = JSON.parse(raw);
+    return (Date.now() - ts) < 24 * 60 * 60 * 1000; // 24h
+  }catch(e){ return false; }
+}
+
+function saveSession(){
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ts: Date.now()}));
+}
+
+function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+}
+
+async function doLogin(){
+  const input = document.getElementById('loginInput');
+  const errEl = document.getElementById('loginErr');
+  const loadEl = document.getElementById('loginLoading');
+  const pw = input.value.trim();
+
+  if(!pw){ errEl.textContent = '⚠️ Inserisci la password'; return; }
+
+  errEl.textContent = '';
+  loadEl.style.display = 'block';
+  input.disabled = true;
+
+  try{
+    const data = await apiGet('getPassword');
+    if(!data || !data.ok){
+      errEl.textContent = '❌ Errore nel recupero della password. Riprova.';
+      return;
+    }
+    if(pw === data.password){
+      saveSession();
+      unlockApp();
+    } else {
+      errEl.textContent = '❌ Password errata';
+      input.value = '';
+      input.focus();
+    }
+  }catch(e){
+    // Fallback: se offline, controlla la password salvata in cache
+    const cached = localStorage.getItem('fb_pw_cache');
+    if(cached && pw === cached){
+      saveSession();
+      unlockApp();
+    } else {
+      errEl.textContent = '❌ Impossibile verificare (offline). Riprova più tardi.';
+    }
+  }finally{
+    loadEl.style.display = 'none';
+    input.disabled = false;
+  }
+}
+
+function unlockApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appContent').style.display  = 'block';
+  // Avvia l'app
+  initMeseSelects();
+  initColorPicker();
+  loadData().then(()=>{ initTipoSelects(); renderAll(); });
+}
+
+function doLogout(){
+  if(!confirm('Vuoi uscire?')) return;
+  clearSession();
+  location.reload();
+}
+
+// ── Loader ───────────────────────────────
 function showLoader(msg='Sincronizzazione...'){
   let el=document.getElementById('syncLoader');
   if(!el){
@@ -459,16 +612,12 @@ function showLoader(msg='Sincronizzazione...'){
 }
 function hideLoader(){ const el=document.getElementById('syncLoader');if(el)el.style.display='none'; }
 
-// ── API calls — CORS-safe ────────────────────────────────
-// GET  → JSONP (evita blocco CORS)
-// POST → form-urlencoded con no-cors + rilegge dopo con GET
+// ── JSONP helper ─────────────────────────
 function apiGet(action, params={}){
   return new Promise((resolve, reject)=>{
-    if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){resolve(null);return;}
     const cbName = '_cb_'+Math.random().toString(36).substr(2,8);
     const qs = new URLSearchParams({action, callback: cbName, ...params}).toString();
 
-    // ⏱️ Se dopo 12 secondi non risponde, rigetta
     const timeout = setTimeout(()=>{
       delete window[cbName];
       document.getElementById('_jsonpScript')?.remove();
@@ -484,18 +633,13 @@ function apiGet(action, params={}){
     const s = document.createElement('script');
     s.id  = '_jsonpScript';
     s.src = `${GAS_URL}?${qs}`;
-    s.onerror = ()=>{
-      clearTimeout(timeout);
-      delete window[cbName];
-      reject(new Error('JSONP error'));
-    };
+    s.onerror = ()=>{ clearTimeout(timeout); delete window[cbName]; reject(new Error('JSONP error')); };
     document.head.appendChild(s);
   });
 }
 
 function apiPost(action, body={}){
   return new Promise((resolve, reject)=>{
-    if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){resolve(null);return;}
     const cbName = '_cb_'+Math.random().toString(36).substr(2,8);
     const payload = encodeURIComponent(JSON.stringify({action,...body}));
     const qs = `action=${action}&payload=${payload}&callback=${cbName}`;
@@ -515,52 +659,39 @@ function apiPost(action, body={}){
     const s = document.createElement('script');
     s.id  = '_jsonpScript2';
     s.src = `${GAS_URL}?${qs}`;
-    s.onerror = ()=>{
-      clearTimeout(timeout);
-      delete window[cbName];
-      reject(new Error('JSONP POST error'));
-    };
+    s.onerror = ()=>{ clearTimeout(timeout); delete window[cbName]; reject(new Error('JSONP POST error')); };
     document.head.appendChild(s);
   });
 }
 
-// ── SAVE: scrive su Sheets (+ localStorage come cache) ──
+// ── SAVE ─────────────────────────────────
 async function save(){
   if(_saving) return;
   _saving = true;
   localStorage.setItem('fb_tipi',   JSON.stringify(tipi));
   localStorage.setItem('fb_spese2', JSON.stringify(dbSpese));
-  if(GAS_URL === 'INCOLLA_QUI_URL_APPS_SCRIPT'){ _saving=false; return; }
   showLoader('Salvataggio...');
-  try {
-    // Manda solo tipi + spese dell'anno corrente (non tutto lo storico)
-    const payload = {
-      tipi,
-      spese: { [currentYear]: dbSpese[currentYear] || [] }
-    };
-    await apiPost('saveAll', payload);
+  try{
+    await apiPost('saveAll',{ tipi, spese:{ [currentYear]: dbSpese[currentYear]||[] } });
     toast('☁️ Salvato su Google Sheets');
-  } catch(e) {
-    console.error('Errore salvataggio:', e);
+  }catch(e){
+    console.error('Errore salvataggio:',e);
     toast('⚠️ Errore salvataggio remoto — dati in cache locale','var(--red)');
-  } finally { hideLoader(); _saving = false; }
+  }finally{ hideLoader(); _saving=false; }
 }
 
-// ── LOAD: legge da Sheets, fallback su localStorage ──────
+// ── LOAD ─────────────────────────────────
 async function loadData(){
   showLoader('Caricamento dati...');
-  // prima carica dalla cache locale (veloce)
   tipi    = JSON.parse(localStorage.getItem('fb_tipi')||'null') || DEFAULT_TIPI;
   dbSpese = JSON.parse(localStorage.getItem('fb_spese2')||'{}');
-  if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){
-    hideLoader(); return;
-  }
   try{
     const data = await apiGet('getAll');
     if(data && data.ok){
       tipi    = data.tipi && data.tipi.length ? data.tipi : DEFAULT_TIPI;
       dbSpese = data.spese || {};
-      // aggiorna cache locale
+      // salva anche la password in cache per uso offline
+      if(data.password) localStorage.setItem('fb_pw_cache', data.password);
       localStorage.setItem('fb_tipi',   JSON.stringify(tipi));
       localStorage.setItem('fb_spese2', JSON.stringify(dbSpese));
     }
@@ -609,7 +740,6 @@ function initTipoSelects(){
   document.getElementById('fTipo').innerHTML=tipi.map(t=>`<option value="${t.id}">${t.emoji} ${t.nome}</option>`).join('');
   document.getElementById('rTipo').innerHTML='<option value="">— Tutte —</option>'+
     tipi.map(t=>`<option value="${t.id}">${t.emoji} ${t.nome}</option>`).join('');
-  // precompila periodicità quando si cambia tipologia
   document.getElementById('fTipo').onchange=function(){
     const t=tipi.find(x=>x.id===this.value);
     if(t&&t.periodo) document.getElementById('fPeriodo').value=t.periodo;
@@ -630,7 +760,6 @@ function selColor(c){
 function renderKPI(){
   const ann=speseDiAnno(currentYear);
   const vis=filterMese==='all'?ann:ann.filter(s=>s.mese==filterMese);
-  const totAnno=ann.reduce((a,s)=>a+s.importo,0);
   const totVis=vis.reduce((a,s)=>a+s.importo,0);
   const g={};vis.forEach(s=>{g[s.tipoId]=(g[s.tipoId]||0)+s.importo;});
   const topId=Object.entries(g).sort((a,b)=>b[1]-a[1])[0]?.[0];
@@ -671,9 +800,9 @@ function renderTable(){
     return;
   }
   const PERSONA_CFG={
-    'Alessandro': {emoji:'👨', col:'#5b9cf6'},
-    'Veronica':   {emoji:'👩', col:'#f06292'},
-    'Entrambi':   {emoji:'👫', col:'#4cbe8a'},
+    'Alessandro':{emoji:'👨',col:'#5b9cf6'},
+    'Veronica':  {emoji:'👩',col:'#f06292'},
+    'Entrambi':  {emoji:'👫',col:'#4cbe8a'},
   };
   const sorted=[...rows].sort((a,b)=>a.mese-b.mese||a.ts-b.ts);
   let track={};
@@ -732,7 +861,6 @@ function editSpesa(id){
   document.getElementById('fImporto').value=s.importo;
   document.getElementById('fPeriodo').value=s.periodo||'mensile';
   document.getElementById('fPersona').value=s.persona||'Alessandro';
-  // rimuove silenziosamente senza confirm, il record viene ricreato al click su Aggiungi
   if(dbSpese[currentYear]) dbSpese[currentYear]=dbSpese[currentYear].filter(x=>x.id!==id);
   save(); renderAll();
   toast('✏️ Caricata per modifica — modifica e clicca Aggiungi','var(--accent)');
@@ -750,7 +878,6 @@ function buildReport(){
   const g={};rows.forEach(s=>{g[s.tipoId]=(g[s.tipoId]||0)+s.importo;});
   const top=Object.entries(g).sort((a,b)=>b[1]-a[1])[0];
   const topT=top?getTipo(top[0]):null;
-
   document.getElementById('kpiReport').innerHTML=`
   <div class="kpi"><div class="kpi-stripe" style="background:var(--accent)"></div>
     <div class="kpi-lbl">💰 ${MESI[mi]} ${currentYear}</div>
@@ -763,52 +890,36 @@ function buildReport(){
   <div class="kpi"><div class="kpi-stripe" style="background:var(--green)"></div>
     <div class="kpi-lbl">📅 Totale anno ${currentYear}</div>
     <div class="kpi-val" style="color:var(--green)">${fmt(speseDiAnno(currentYear).reduce((a,s)=>a+s.importo,0))}</div></div>`;
-
   const pL=Object.keys(g).map(id=>getTipo(id).nome);
   const pD=Object.values(g);
   const pC=Object.keys(g).map(id=>getTipo(id).colore);
-
   killChart('pie');
-  charts.pie=new Chart(document.getElementById('chartPie'),{
-    type:'doughnut',
+  charts.pie=new Chart(document.getElementById('chartPie'),{type:'doughnut',
     data:{labels:pL,datasets:[{data:pD,backgroundColor:pC,borderColor:'#0d1117',borderWidth:3}]},
     options:{plugins:{legend:{labels:{color:CO.color,font:{family:CO.font,size:11}}},
-      tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)} (${totM?((ctx.raw/totM)*100).toFixed(1):'0'}%)`}}}}
-  });
-
+      tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)} (${totM?((ctx.raw/totM)*100).toFixed(1):'0'}%)`}}}}});
   killChart('bar');
-  charts.bar=new Chart(document.getElementById('chartBar'),{
-    type:'bar',
+  charts.bar=new Chart(document.getElementById('chartBar'),{type:'bar',
     data:{labels:pL,datasets:[{label:'€',data:pD,backgroundColor:pC,borderRadius:6}]},
     options:{plugins:{legend:{display:false}},scales:{
       x:{ticks:{color:CO.color,font:{family:CO.font}},grid:{color:CO.grid}},
-      y:{ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}
-  });
-
+      y:{ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}});
   killChart('line');
   const lD=MESI.map((_,i)=>speseDiAnno(currentYear).filter(s=>s.mese===i).reduce((a,s)=>a+s.importo,0));
-  charts.line=new Chart(document.getElementById('chartLine'),{
-    type:'line',
-    data:{labels:MESI.map(m=>m.substr(0,3)),datasets:[{
-      label:`Spese ${currentYear}`,data:lD,
-      borderColor:'#f6c544',backgroundColor:'rgba(246,197,68,.1)',
-      pointBackgroundColor:'#f6c544',tension:.4,fill:true}]},
+  charts.line=new Chart(document.getElementById('chartLine'),{type:'line',
+    data:{labels:MESI.map(m=>m.substr(0,3)),datasets:[{label:`Spese ${currentYear}`,data:lD,
+      borderColor:'#f6c544',backgroundColor:'rgba(246,197,68,.1)',pointBackgroundColor:'#f6c544',tension:.4,fill:true}]},
     options:{plugins:{legend:{labels:{color:CO.color,font:{family:CO.font}}}},scales:{
       x:{ticks:{color:CO.color,font:{family:CO.font}},grid:{color:CO.grid}},
-      y:{ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}
-  });
-
-  const sorted=Object.entries(g).sort((a,b)=>b[1]-a[1]);
-  const max=sorted[0]?.[1]||1;
-  document.getElementById('topBars').innerHTML=sorted.length
-    ?sorted.map(([id,val])=>{
-        const t=getTipo(id);const pct=((val/totM)*100).toFixed(1);
-        return `<div class="prog-row">
-          <div class="prog-lbl">${t.emoji} ${t.nome}</div>
+      y:{ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}});
+  const sorted2=Object.entries(g).sort((a,b)=>b[1]-a[1]);
+  const max=sorted2[0]?.[1]||1;
+  document.getElementById('topBars').innerHTML=sorted2.length
+    ?sorted2.map(([id,val])=>{const t=getTipo(id);const pct=((val/totM)*100).toFixed(1);
+        return `<div class="prog-row"><div class="prog-lbl">${t.emoji} ${t.nome}</div>
           <div class="prog-track"><div class="prog-fill" style="width:${(val/max)*100}%;background:${t.colore}"></div></div>
           <div class="prog-val" style="color:${t.colore}">${fmt(val)}</div>
-          <div class="prog-pct">${pct}%</div></div>`;
-      }).join('')
+          <div class="prog-pct">${pct}%</div></div>`;}).join('')
     :'<div style="color:var(--muted);padding:.5rem">Nessun dato per questo mese</div>';
 }
 
@@ -821,7 +932,6 @@ function renderStorico(){
   const totAll=tutto.reduce((a,s)=>a+s.importo,0);
   const anniDati=anni.filter(y=>speseDiAnno(y).length>0);
   const media=anniDati.length?totAll/anniDati.length:0;
-
   document.getElementById('kpiStorico').innerHTML=`
   <div class="kpi"><div class="kpi-stripe" style="background:var(--accent)"></div>
     <div class="kpi-lbl">🌍 Totale storico</div>
@@ -834,36 +944,29 @@ function renderStorico(){
     <div class="kpi-lbl">📅 Anno attivo</div>
     <div class="kpi-val" style="color:var(--blue)">${currentYear}</div>
     <div class="kpi-sub">Usa ‹ › in alto per cambiare</div></div>`;
-
   document.getElementById('historyGrid').innerHTML=anni.map(y=>{
     const tot=speseDiAnno(y).reduce((a,s)=>a+s.importo,0);
     const isCur=y===currentYear;
     return `<div class="hist-card ${isCur?'cur-year':''}" onclick="jumpYear(${y})">
       <div class="hist-year">${y}${isCur?' ★':''}</div>
       <div class="hist-n">${speseDiAnno(y).length} voci</div>
-      <div class="hist-amt">${fmt(tot)}</div></div>`;
-  }).join('');
-
+      <div class="hist-amt">${fmt(tot)}</div></div>`;}).join('');
   killChart('storico');
   const ds=tipi.map(t=>{
     const data=anni.map(y=>speseDiAnno(y).filter(s=>s.tipoId===t.id).reduce((a,s)=>a+s.importo,0));
     return{label:t.emoji+' '+t.nome,data,backgroundColor:t.colore+'bb',borderColor:t.colore,borderWidth:1,borderRadius:4};
   }).filter(d=>d.data.some(v=>v>0));
-
   if(ds.length){
-    charts.storico=new Chart(document.getElementById('chartStorico'),{
-      type:'bar',
+    charts.storico=new Chart(document.getElementById('chartStorico'),{type:'bar',
       data:{labels:anni.map(String),datasets:ds},
       options:{plugins:{legend:{labels:{color:CO.color,font:{family:CO.font,size:11}}}},
         scales:{
           x:{stacked:true,ticks:{color:CO.color,font:{family:CO.font}},grid:{color:CO.grid}},
-          y:{stacked:true,ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}
-    });
+          y:{stacked:true,ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}});
   } else {
     document.getElementById('chartStorico').insertAdjacentHTML('afterend','<div class="empty">Inserisci dati in più anni per vedere il confronto</div>');
   }
 }
-
 function jumpYear(y){
   currentYear=y;
   document.getElementById('yearDisplay').textContent=currentYear;
@@ -883,7 +986,6 @@ const PERIODO_BADGE={
   annuale:       {label:'Annuale',        col:'#e05c5c'},
   occasionale:   {label:'Occasionale',    col:'#6b7694'},
 };
-
 function renderTipoList(){
   document.getElementById('tipoList').innerHTML=tipi.map(t=>{
     const pb=PERIODO_BADGE[t.periodo||'mensile']||PERIODO_BADGE.mensile;
@@ -897,8 +999,7 @@ function renderTipoList(){
     <div class="d-flex gap-1">
       <button class="btn-xs btn-xs-edit" onclick="editTipo('${t.id}')">✏️</button>
       <button class="btn-xs btn-xs-del"  onclick="delTipo('${t.id}')">🗑️</button>
-    </div></li>`;
-  }).join('');
+    </div></li>`;}).join('');
 }
 function saveTipo(){
   const nome=document.getElementById('aNome').value.trim();
@@ -949,42 +1050,27 @@ function esportaCSV(){
   const rows=speseDiAnno(currentYear).map(s=>`${currentYear},${MESI[s.mese]},${getTipo(s.tipoId).nome},"${s.desc||''}",${s.importo},${s.periodo||'mensile'}`);
   const csv='Anno,Mese,Tipologia,Descrizione,Importo,Periodicità\n'+rows.join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download=`spese_${currentYear}.csv`;a.click();
-  toast('📄 CSV esportato!');
+  a.download=`spese_${currentYear}.csv`;a.click();toast('📄 CSV esportato!');
 }
-
 function esportaJSON(){
-  const backup={
-    versione: 2,
-    esportato: new Date().toISOString(),
-    tipi,
-    spese: dbSpese
-  };
-  const json=JSON.stringify(backup, null, 2);
+  const backup={versione:2,esportato:new Date().toISOString(),tipi,spese:dbSpese};
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
   a.download=`familybudget_backup_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  toast('💾 Backup JSON scaricato!');
+  a.click();toast('💾 Backup JSON scaricato!');
 }
-
 function importaJSON(input){
-  const file=input.files[0]; if(!file) return;
+  const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=function(e){
     try{
       const data=JSON.parse(e.target.result);
-      if(!data.spese && !data.tipi) throw new Error('Formato non valido');
-      if(!confirm(`Importare il backup del ${data.esportato ? new Date(data.esportato).toLocaleDateString('it-IT') : '?'}?\nI dati attuali verranno sovrascritti.`)){
-        input.value=''; return;
-      }
-      if(data.tipi)  tipi    = data.tipi;
-      if(data.spese) dbSpese = data.spese;
-      save(); renderAll();
-      toast('✅ Backup ripristinato con successo!');
-    } catch(err){
-      toast('❌ File non valido o corrotto','var(--red)');
-    }
+      if(!data.spese&&!data.tipi)throw new Error('Formato non valido');
+      if(!confirm(`Importare il backup del ${data.esportato?new Date(data.esportato).toLocaleDateString('it-IT'):'?'}?\nI dati attuali verranno sovrascritti.`)){input.value='';return;}
+      if(data.tipi)tipi=data.tipi;
+      if(data.spese)dbSpese=data.spese;
+      save();renderAll();toast('✅ Backup ripristinato con successo!');
+    }catch(err){toast('❌ File non valido o corrotto','var(--red)');}
     input.value='';
   };
   reader.readAsText(file);
@@ -1012,24 +1098,13 @@ function importaDemo(){
     {mese:2,tipoId:'t2',desc:'Spesa mensile',importo:510,periodo:'mensile'},
     {mese:2,tipoId:'t3',desc:'Revisione auto',importo:220,periodo:'annuale'},
     {mese:2,tipoId:'t5',desc:'Libri scuola',importo:90,periodo:'annuale'},
-    {mese:3,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
-    {mese:3,tipoId:'t2',desc:'Spesa mensile',importo:480,periodo:'mensile'},
-    {mese:3,tipoId:'t7',desc:'Internet + TV',importo:65,periodo:'mensile'},
-    {mese:3,tipoId:'t6',desc:'Vacanza Pasqua',importo:420,periodo:'occasionale'},
-    {mese:4,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
-    {mese:4,tipoId:'t2',desc:'Spesa mensile',importo:500,periodo:'mensile'},
-    {mese:4,tipoId:'t4',desc:'Visita medico',importo:120,periodo:'quadrimestrale'},
-    {mese:5,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
-    {mese:5,tipoId:'t2',desc:'Spesa mensile',importo:470,periodo:'mensile'},
-    {mese:5,tipoId:'t6',desc:'Concerto',importo:90,periodo:'occasionale'},
-    {mese:5,tipoId:'t3',desc:'Assicurazione auto',importo:380,periodo:'semestrale'},
   ];
   dbSpese[currentYear].push(...d.map(x=>({...x,id:uid(),ts:Date.now()})));
   save();renderAll();toast('⭐ Dati demo caricati!','var(--accent)');
 }
 
 // ══════════════════════════════════════════
-//  TAB SWITCH
+//  TAB SWITCH + RENDER ALL
 // ══════════════════════════════════════════
 function switchTab(name,btn){
   ['spese','report','storico','admin'].forEach(id=>{
@@ -1040,20 +1115,22 @@ function switchTab(name,btn){
   if(name==='report')buildReport();
   if(name==='storico'){killChart('storico');renderStorico();}
 }
-
-// ══════════════════════════════════════════
-//  RENDER ALL
-// ══════════════════════════════════════════
 function renderAll(){
   document.getElementById('yearDisplay').textContent=currentYear;
   renderKPI();renderPills();renderTable();renderTipoList();initTipoSelects();
 }
 
-document.addEventListener('DOMContentLoaded', async ()=>{
-  initMeseSelects();initColorPicker();
-  await loadData();          // carica da Google Sheets (o cache locale)
-  initTipoSelects();
-  renderAll();
+// ══════════════════════════════════════════
+//  AVVIO
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(checkSession()){
+    // Sessione valida → salta il login
+    unlockApp();
+  }
+  // Altrimenti mostra la schermata di login (già visibile di default)
+  // Focus automatico sul campo password
+  document.getElementById('loginInput').focus();
 });
 </script>
 </body>

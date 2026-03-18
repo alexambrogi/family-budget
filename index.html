@@ -571,15 +571,17 @@ async function doLogin(){
       input.focus();
     }
   }catch(e){
-    // Fallback: se offline, controlla la password salvata in cache
-    const cached = localStorage.getItem('fb_pw_cache');
-    if(cached && pw === cached){
-      saveSession();
-      unlockApp();
-    } else {
-      errEl.textContent = '❌ Impossibile verificare (offline). Riprova più tardi.';
-    }
-  }finally{
+  console.error('Errore login:', e);
+  // Fallback: se offline, controlla la password salvata in cache
+  const cached = localStorage.getItem('fb_pw_cache');
+  if(cached && pw === cached){
+    saveSession();
+    unlockApp();
+  } else {
+    // Mostra errore più specifico
+    errEl.textContent = '❌ Errore: ' + e.message + ' — assicurati di avere connessione internet al primo accesso.';
+  }
+}finally{
     loadEl.style.display = 'none';
     input.disabled = false;
   }

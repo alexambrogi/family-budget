@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FamilyBudget</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b27;--surface2:#1e2535;--border:#252d40;
+  --accent:#f6c544;--accent2:#e07b39;--text:#dde3f0;--muted:#6b7694;
+  --green:#4cbe8a;--red:#e05c5c;--blue:#5b9cf6;--purple:#a78bfa;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 1rem;height:56px;display:flex;align-items:center;gap:.6rem;
+  position:sticky;top:0;z-index:200}
+.brand{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:900;
+  color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:.4rem}
+.brand em{color:var(--text);font-style:normal}
+.year-switcher{margin-left:auto;display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.year-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.2rem;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;touch-action:manipulation}
+.year-btn:active{border-color:var(--accent);color:var(--accent)}
+.year-display{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
+  color:var(--accent);min-width:48px;text-align:center}
+
+/* ── NAV TABS ── */
+.nav-tabs-custom{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav-tabs-custom::-webkit-scrollbar{display:none}
+.ntab{background:none;border:none;color:var(--muted);font-size:.8rem;font-weight:500;
+  padding:.72rem .7rem;border-bottom:3px solid transparent;cursor:pointer;
+  white-space:nowrap;display:flex;align-items:center;gap:.3rem;transition:all .2s;
+  touch-action:manipulation;flex:1;justify-content:center}
+.ntab:active{color:var(--text)}
+.ntab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── LAYOUT ── */
+.page{padding:.85rem;max-width:1420px;margin:0 auto}
+@media(min-width:768px){.page{padding:1.8rem}}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:1rem}
+@media(min-width:600px){.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1.5rem}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:.9rem 1rem;position:relative;overflow:hidden}
+.kpi-stripe{position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:.3rem}
+.kpi-val{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;line-height:1.1}
+.kpi-sub{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+
+/* ── CARD ── */
+.card-dark{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+@media(min-width:768px){.card-dark{padding:1.4rem}}
+.sec-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;
+  margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+
+/* ── FORM ── */
+label{font-size:.8rem;color:var(--muted);margin-bottom:3px;display:block}
+.form-control,.form-select{background:var(--surface2)!important;border:1px solid var(--border)!important;
+  color:var(--text)!important;border-radius:8px!important;font-size:.9rem;
+  padding:.5rem .75rem;min-height:44px}
+.form-control:focus,.form-select:focus{border-color:var(--accent)!important;
+  box-shadow:0 0 0 3px rgba(246,197,68,.14)!important}
+.form-control::placeholder{color:var(--muted)!important}
+option{background:var(--surface2)}
+
+/* ── BUTTONS ── */
+.btn-gold{background:var(--accent);color:#000;border:none;border-radius:8px;
+  padding:.55rem 1.2rem;font-weight:700;font-size:.87rem;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  transition:opacity .2s;touch-action:manipulation;min-height:44px}
+.btn-gold:active{opacity:.8}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);
+  border-radius:8px;padding:.5rem 1rem;font-size:.85rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.4rem;transition:all .2s;
+  touch-action:manipulation;min-height:44px}
+.btn-ghost:active{border-color:var(--accent);color:var(--accent)}
+.btn-xs{border-radius:6px;padding:6px 11px;font-size:.82rem;cursor:pointer;border:1px solid;
+  transition:all .15s;background:transparent;line-height:1.3;touch-action:manipulation;min-height:36px}
+.btn-xs-del{border-color:var(--red);color:var(--red)}.btn-xs-del:active{background:var(--red);color:#fff}
+.btn-xs-edit{border-color:var(--accent);color:var(--accent)}.btn-xs-edit:active{background:var(--accent);color:#000}
+
+/* ── MONTH PILLS ── */
+.pill-bar{display:flex;flex-wrap:wrap;gap:.3rem}
+.mpill{background:transparent;border:1px solid var(--border);color:var(--muted);
+  border-radius:20px;padding:5px 10px;font-size:.76rem;cursor:pointer;transition:all .15s;
+  touch-action:manipulation}
+.mpill.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.mpill:active:not(.active){border-color:var(--accent);color:var(--accent)}
+
+/* ══ TABLE desktop ══ */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:.84rem}
+.tbl-wrap thead th{background:var(--surface2);color:var(--muted);font-size:.68rem;
+  text-transform:uppercase;letter-spacing:.7px;padding:.7rem .85rem;
+  border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl-wrap tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+.tbl-wrap tbody tr:last-child{border-bottom:none}
+.tbl-wrap tbody tr:hover{background:var(--surface2)}
+.tbl-wrap td{padding:.62rem .85rem;vertical-align:middle}
+
+/* ══ TABLE → CARD on mobile ══ */
+@media(max-width:767px){
+  .tbl-wrap{background:transparent;border:none;border-radius:0;overflow:visible}
+  .tbl-wrap table,.tbl-wrap thead,.tbl-wrap tbody,.tbl-wrap tr,.tbl-wrap td{display:block;width:100%}
+  .tbl-wrap thead{display:none}
+  .tbl-wrap tbody tr{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    margin-bottom:.65rem;padding:.85rem .9rem;
+    display:grid;grid-template-columns:1fr 1fr;gap:.35rem .7rem
+  }
+  .tbl-wrap td{padding:0;border:none;font-size:.83rem}
+  .tbl-wrap td::before{
+    content:attr(data-label);display:block;
+    font-size:.62rem;text-transform:uppercase;letter-spacing:.6px;
+    color:var(--muted);margin-bottom:2px
+  }
+  .tbl-wrap td.td-full{grid-column:1/-1}
+  .tbl-wrap td.td-actions{
+    grid-column:1/-1;display:flex;gap:.5rem;justify-content:flex-end;
+    margin-top:.25rem;padding-top:.5rem;border-top:1px solid var(--border)
+  }
+}
+
+.badge-cat{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;
+  border-radius:20px;font-size:.72rem;font-weight:600}
+.v-green{color:var(--green);font-weight:700;font-family:'Playfair Display',serif}
+.v-red{color:var(--red);font-weight:700;font-family:'Playfair Display',serif}
+.v-acc{color:var(--accent);font-weight:700;font-family:'Playfair Display',serif}
+.v-blue{color:var(--blue);font-weight:700;font-family:'Playfair Display',serif}
+
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:1fr;gap:1rem;margin-top:1rem}
+@media(min-width:768px){.chart-grid{grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1.5rem}}
+canvas{max-height:280px}
+
+/* ── PROGRESS ── */
+.prog-row{display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem}
+.prog-lbl{min-width:100px;font-size:.78rem;display:flex;align-items:center;gap:.35rem}
+.prog-track{flex:1;min-width:40px;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.prog-val{min-width:65px;text-align:right;font-size:.78rem;font-weight:700}
+.prog-pct{min-width:34px;text-align:right;font-size:.7rem;color:var(--muted)}
+
+/* ── STORICO ── */
+.history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.65rem;margin-top:.65rem}
+.hist-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+  padding:.8rem;text-align:center;transition:all .2s;cursor:pointer;touch-action:manipulation}
+.hist-card:active{border-color:var(--accent);transform:translateY(-2px)}
+.hist-card.cur-year{border-color:var(--accent);background:rgba(246,197,68,.07)}
+.hist-year{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;color:var(--accent)}
+.hist-n{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+.hist-amt{font-size:.9rem;font-weight:700;color:var(--green);margin-top:.2rem}
+
+/* ── ADMIN TIPI ── */
+.tipo-ul{list-style:none}
+.tipo-li{display:flex;align-items:center;justify-content:space-between;
+  padding:.65rem 1rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.4rem}
+.tipo-li:last-child{border-bottom:none}
+.tipo-info{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.cdot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.9rem}
+.toast-wrap{position:fixed;bottom:1rem;right:1rem;z-index:9999;
+  display:flex;flex-direction:column;gap:.4rem;max-width:calc(100vw - 2rem)}
+.tmsg{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:.6rem 1rem;font-size:.82rem;display:flex;align-items:center;gap:.5rem;
+  animation:tIn .28s ease;word-break:break-word}
+@keyframes tIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M16 14h.01"/></svg>
+    Family<em>Budget</em>
+  </div>
+  <div class="year-switcher">
+    <button class="year-btn" onclick="changeYear(-1)" title="Anno precedente">&#8249;</button>
+    <div class="year-display" id="yearDisplay">—</div>
+    <button class="year-btn" onclick="changeYear(+1)" title="Anno successivo">&#8250;</button>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs-custom">
+  <button class="ntab active" onclick="switchTab('spese',this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Spese
+  </button>
+  <button class="ntab" onclick="switchTab('report',this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+    Report
+  </button>
+  <button class="ntab" onclick="switchTab('storico',this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Storico Anni
+  </button>
+  <button class="ntab" onclick="switchTab('admin',this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Admin
+  </button>
+</div>
+
+<!-- ═══ TAB SPESE ═══ -->
+<div id="tab-spese" class="tab-pane">
+<div class="page">
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="card-dark mb-4">
+    <div class="sec-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Aggiungi Spesa
+    </div>
+    <div class="row g-3">
+      <div class="col-md-2"><label>Mese di riferimento</label><select class="form-select" id="fMese"></select></div>
+      <div class="col-md-2"><label>Tipologia</label><select class="form-select" id="fTipo"></select></div>
+      <div class="col-md-2"><label>Descrizione</label><input type="text" class="form-control" id="fDesc" placeholder="es. Condominio"/></div>
+      <div class="col-md-1"><label>Importo (€)</label><input type="number" class="form-control" id="fImporto" placeholder="0.00" min="0" step="0.01"/></div>
+      <div class="col-md-2"><label>Periodicità</label>
+        <select class="form-select" id="fPeriodo">
+          <option value="mensile">📅 Mensile</option>
+          <option value="bimestrale">📅📅 Bimestrale</option>
+          <option value="trimestrale">🗓️ Trimestrale</option>
+          <option value="quadrimestrale">🗓️ Quadrimestrale</option>
+          <option value="semestrale">📆 Semestrale</option>
+          <option value="annuale">📆 Annuale</option>
+          <option value="occasionale">✳️ Occasionale</option>
+        </select>
+      </div>
+      <div class="col-md-2"><label>Chi spende</label>
+        <select class="form-select" id="fPersona">
+          <option value="Alessandro">👨 Alessandro</option>
+          <option value="Veronica">👩 Veronica</option>
+          <option value="Entrambi">👫 Entrambi</option>
+        </select>
+      </div>
+      <div class="col-md-1 d-flex align-items-end">
+        <button class="btn-gold w-100" onclick="addSpesa()" style="white-space:nowrap">+ Aggiungi</button>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+    <div class="sec-title" style="margin-bottom:0">📋 Registro Spese</div>
+    <div class="pill-bar" id="monthPills"></div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Mese</th><th>Tipologia</th><th>Descrizione</th>
+        <th>Periodicità</th><th>Chi</th><th>Importo</th><th>Montante Mese</th><th>Totale Anno</th><th></th>
+      </tr></thead>
+      <tbody id="speseBody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB REPORT ═══ -->
+<div id="tab-report" class="tab-pane" style="display:none">
+<div class="page">
+  <div class="card-dark mb-3" style="padding:1.1rem">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3"><label>Mese da analizzare</label><select class="form-select" id="rMese"></select></div>
+      <div class="col-md-3"><label>Filtra tipologia</label><select class="form-select" id="rTipo"><option value="">— Tutte —</option></select></div>
+      <div class="col-md-2 d-flex align-items-end"><button class="btn-gold" onclick="buildReport()">↺ Aggiorna</button></div>
+    </div>
+  </div>
+  <div class="kpi-grid" id="kpiReport"></div>
+  <div class="chart-grid">
+    <div class="card-dark"><div class="sec-title">🥧 Distribuzione</div><canvas id="chartPie"></canvas></div>
+    <div class="card-dark"><div class="sec-title">📊 Confronto categorie</div><canvas id="chartBar"></canvas></div>
+    <div class="card-dark" style="grid-column:1/-1"><div class="sec-title">📈 Andamento mensile</div><canvas id="chartLine"></canvas></div>
+  </div>
+  <div class="card-dark mt-3">
+    <div class="sec-title">⭐ Classifica incidenza</div>
+    <div id="topBars"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB STORICO ═══ -->
+<div id="tab-storico" class="tab-pane" style="display:none">
+<div class="page">
+  <div class="kpi-grid" id="kpiStorico"></div>
+  <div class="card-dark mb-3">
+    <div class="sec-title">📅 Riepilogo per Anno <span style="font-size:.75rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400">(clicca per navigare)</span></div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+  <div class="card-dark">
+    <div class="sec-title">📈 Confronto annuale per categoria</div>
+    <canvas id="chartStorico" style="max-height:360px"></canvas>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB ADMIN ═══ -->
+<div id="tab-admin" class="tab-pane" style="display:none">
+<div class="page">
+  <div class="row g-3">
+    <div class="col-md-5">
+      <div class="card-dark">
+        <div class="sec-title">🏷️ <span id="adminFormTitle">Nuova Tipologia</span></div>
+        <div class="mb-3"><label>Nome</label><input type="text" class="form-control" id="aNome" placeholder="es. Trasporti"/></div>
+        <div class="mb-3">
+          <label>Emoji</label>
+          <input type="text" class="form-control" id="aEmoji" placeholder="es. 🚗" maxlength="4" style="font-size:1.2rem"/>
+          <div style="font-size:.73rem;color:var(--muted);margin-top:3px">Copia un emoji — ad es. 🏠 🛒 🚗 💊 📚 🎮 ⚡ ✈️ 👗 🍽️</div>
+        </div>
+        <div class="mb-3">
+          <label>Periodicità predefinita</label>
+          <select class="form-select" id="aPeriodo">
+            <option value="mensile">📅 Mensile</option>
+            <option value="bimestrale">🗓️ Bimestrale</option>
+            <option value="trimestrale">🗓️ Trimestrale</option>
+            <option value="quadrimestrale">🗓️ Quadrimestrale</option>
+            <option value="semestrale">📆 Semestrale</option>
+            <option value="annuale">📆 Annuale</option>
+            <option value="occasionale">✳️ Occasionale</option>
+          </select>
+          <div style="font-size:.73rem;color:var(--muted);margin-top:3px">Verrà precompilata in automatico all'inserimento spesa</div>
+        </div>
+        <div class="mb-3">
+          <label>Colore</label>
+          <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.35rem" id="colorPicker"></div>
+          <input type="color" class="form-control mt-2" id="aColore" value="#f6c544" style="height:36px;padding:3px 6px"/>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn-gold" onclick="saveTipo()" style="flex:1;justify-content:center">💾 <span id="saveTipoLbl">Salva Tipologia</span></button>
+          <button class="btn-ghost" id="cancelTipoBtn" style="display:none" onclick="resetTipoForm()">✕ Annulla</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <div class="card-dark" style="padding:0;overflow:hidden">
+        <div style="padding:1rem 1.2rem .6rem;display:flex;align-items:center;justify-content:space-between">
+          <div class="sec-title" style="margin-bottom:0">📂 Tipologie configurate</div>
+          <button class="btn-gold" style="font-size:.8rem;padding:.38rem .9rem" onclick="resetTipoForm();document.getElementById('aNome').focus()">+ Nuova</button>
+        </div>
+        <ul class="tipo-ul" id="tipoList"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="card-dark mt-3">
+    <div class="sec-title">🗄️ Gestione Dati</div>
+
+    <!-- BACKUP / RIPRISTINO JSON -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.1rem;margin-bottom:1rem">
+      <div style="font-size:.8rem;font-weight:600;color:var(--accent);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.6px">💾 Backup &amp; Ripristino</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.9rem">
+        Salva tutti i dati (spese + tipologie) in un file <code style="background:var(--border);padding:1px 5px;border-radius:4px;color:var(--text)">familybudget_backup.json</code> e ricaricalo su qualsiasi device.
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn-gold" onclick="esportaJSON()">⬇ Scarica Backup JSON</button>
+        <label class="btn-ghost" style="cursor:pointer;margin:0">
+          ⬆ Carica Backup JSON
+          <input type="file" accept=".json" id="importJsonInput" style="display:none" onchange="importaJSON(this)"/>
+        </label>
+      </div>
+    </div>
+
+    <!-- ALTRE OPZIONI -->
+    <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.6px">Altre opzioni</div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn-ghost" onclick="esportaCSV()">⬇ Esporta CSV anno corrente</button>
+      <button class="btn-ghost" onclick="importaDemo()">⭐ Carica dati demo</button>
+      <button class="btn-ghost" style="border-color:var(--red);color:var(--red)" onclick="svuotaAnno()">🗑 Svuota anno corrente</button>
+      <button class="btn-ghost" style="border-color:var(--red);color:var(--red)" onclick="svuotaTutto()">⚠️ Svuota tutto</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+//  COSTANTI
+// ══════════════════════════════════════════
+const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+            'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const PALETTE=['#f6c544','#4cbe8a','#e05c5c','#5b9cf6','#e07b39',
+               '#a78bfa','#4dd0e1','#f06292','#aed581','#ff8a65'];
+
+// ══════════════════════════════════════════
+//  STATO
+// ══════════════════════════════════════════
+let currentYear = new Date().getFullYear();
+let filterMese  = 'all';
+let editTipoId  = null;
+let charts      = {};
+
+// ════════════════════════════════════════════════════════
+//  ⚙️  CONFIGURAZIONE GOOGLE SHEETS
+//  Incolla qui l'URL del tuo Google Apps Script dopo il deploy
+// ════════════════════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzEYfksSd5RUcaIOmkuPl6u7KI033SbPHO_ZGYRqemHdIJBLrZeKQMTn3eiLBku6oQ_Uw/exec';
+
+// ── Tipi default (usati solo al primo avvio se Sheets è vuoto) ──
+const DEFAULT_TIPI = [
+  {id:'t1',nome:'Casa',         emoji:'🏠',colore:'#4cbe8a',periodo:'mensile'},
+  {id:'t2',nome:'Alimentari',   emoji:'🛒',colore:'#f6c544',periodo:'mensile'},
+  {id:'t3',nome:'Trasporti',    emoji:'🚗',colore:'#5b9cf6',periodo:'mensile'},
+  {id:'t4',nome:'Salute',       emoji:'💊',colore:'#e05c5c',periodo:'occasionale'},
+  {id:'t5',nome:'Istruzione',   emoji:'📚',colore:'#a78bfa',periodo:'annuale'},
+  {id:'t6',nome:'Svago',        emoji:'🎮',colore:'#e07b39',periodo:'occasionale'},
+  {id:'t7',nome:'Utenze',       emoji:'⚡',colore:'#4dd0e1',periodo:'bimestrale'},
+];
+
+let tipi   = [];
+let dbSpese = {};
+let _saving = false;   // mutex per evitare salvataggi sovrapposti
+
+function speseDiAnno(y){ return dbSpese[y]||[]; }
+function tutteLeSpese(){ return Object.values(dbSpese).flat(); }
+function anniUsati(){
+  const s=new Set(Object.keys(dbSpese).map(Number).filter(n=>!isNaN(n)&&speseDiAnno(n).length>0));
+  s.add(currentYear);
+  return [...s].sort((a,b)=>a-b);
+}
+
+// ── Indicatore di caricamento ────────────────────────────
+function showLoader(msg='Sincronizzazione...'){
+  let el=document.getElementById('syncLoader');
+  if(!el){
+    el=document.createElement('div');el.id='syncLoader';
+    el.style.cssText='position:fixed;top:56px;left:0;right:0;z-index:500;background:var(--accent);color:#000;font-size:.78rem;font-weight:700;text-align:center;padding:5px;letter-spacing:.4px';
+    document.body.appendChild(el);
+  }
+  el.textContent='⏳ '+msg;el.style.display='block';
+}
+function hideLoader(){ const el=document.getElementById('syncLoader');if(el)el.style.display='none'; }
+
+// ── API calls — CORS-safe ────────────────────────────────
+// GET  → JSONP (evita blocco CORS)
+// POST → form-urlencoded con no-cors + rilegge dopo con GET
+function apiGet(action, params={}){
+  return new Promise((resolve, reject)=>{
+    if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){resolve(null);return;}
+    const cbName = '_cb_'+Math.random().toString(36).substr(2,8);
+    const qs = new URLSearchParams({action, callback: cbName, ...params}).toString();
+    window[cbName] = (data)=>{
+      delete window[cbName];
+      document.getElementById('_jsonpScript')?.remove();
+      resolve(data);
+    };
+    const s = document.createElement('script');
+    s.id  = '_jsonpScript';
+    s.src = `${GAS_URL}?${qs}`;
+    s.onerror = ()=>{ delete window[cbName]; reject(new Error('JSONP error')); };
+    document.head.appendChild(s);
+  });
+}
+
+function apiPost(action, body={}){
+  return new Promise((resolve, reject)=>{
+    if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){resolve(null);return;}
+    // Invia come GET con payload JSON encodato (Apps Script legge da parameter)
+    const cbName = '_cb_'+Math.random().toString(36).substr(2,8);
+    const payload = encodeURIComponent(JSON.stringify({action,...body}));
+    const qs = `action=${action}&payload=${payload}&callback=${cbName}`;
+    window[cbName] = (data)=>{
+      delete window[cbName];
+      document.getElementById('_jsonpScript2')?.remove();
+      resolve(data);
+    };
+    const s = document.createElement('script');
+    s.id  = '_jsonpScript2';
+    s.src = `${GAS_URL}?${qs}`;
+    s.onerror = ()=>{ delete window[cbName]; reject(new Error('JSONP POST error')); };
+    document.head.appendChild(s);
+  });
+}
+
+// ── SAVE: scrive su Sheets (+ localStorage come cache) ──
+async function save(){
+  if(_saving) return;
+  _saving=true;
+  // cache locale sempre aggiornata
+  localStorage.setItem('fb_tipi',   JSON.stringify(tipi));
+  localStorage.setItem('fb_spese2', JSON.stringify(dbSpese));
+  if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){_saving=false;return;}
+  showLoader('Salvataggio...');
+  try{
+    await apiPost('saveAll',{tipi, spese: dbSpese});
+    toast('☁️ Salvato su Google Sheets');
+  }catch(e){
+    toast('⚠️ Errore salvataggio remoto — dati in cache locale','var(--red)');
+  }finally{ hideLoader(); _saving=false; }
+}
+
+// ── LOAD: legge da Sheets, fallback su localStorage ──────
+async function loadData(){
+  showLoader('Caricamento dati...');
+  // prima carica dalla cache locale (veloce)
+  tipi    = JSON.parse(localStorage.getItem('fb_tipi')||'null') || DEFAULT_TIPI;
+  dbSpese = JSON.parse(localStorage.getItem('fb_spese2')||'{}');
+  if(GAS_URL==='INCOLLA_QUI_URL_APPS_SCRIPT'){
+    hideLoader(); return;
+  }
+  try{
+    const data = await apiGet('getAll');
+    if(data && data.ok){
+      tipi    = data.tipi && data.tipi.length ? data.tipi : DEFAULT_TIPI;
+      dbSpese = data.spese || {};
+      // aggiorna cache locale
+      localStorage.setItem('fb_tipi',   JSON.stringify(tipi));
+      localStorage.setItem('fb_spese2', JSON.stringify(dbSpese));
+    }
+  }catch(e){
+    toast('⚠️ Offline — mostro dati locali','var(--accent2)');
+  }finally{ hideLoader(); }
+}
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function uid(){ return '_'+Math.random().toString(36).substr(2,9); }
+function fmt(n){ return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n||0); }
+function getTipo(id){ return tipi.find(t=>t.id===id)||{nome:'—',emoji:'❓',colore:'#888'}; }
+function toast(msg,col='var(--green)'){
+  const w=document.getElementById('toastWrap');
+  const d=document.createElement('div');d.className='tmsg';
+  d.innerHTML=`<span style="color:${col};font-size:1rem">●</span> ${msg}`;
+  w.appendChild(d);setTimeout(()=>d.remove(),3000);
+}
+const CO={color:'#dde3f0',grid:'rgba(255,255,255,.06)',font:'DM Sans'};
+function killChart(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+// ══════════════════════════════════════════
+//  YEAR NAV
+// ══════════════════════════════════════════
+function changeYear(d){
+  currentYear+=d;
+  document.getElementById('yearDisplay').textContent=currentYear;
+  filterMese='all';
+  renderAll();
+}
+
+// ══════════════════════════════════════════
+//  SELECTS INIT
+// ══════════════════════════════════════════
+function initMeseSelects(){
+  ['fMese','rMese'].forEach(id=>{
+    const s=document.getElementById(id);
+    const cur=s.value;
+    s.innerHTML=MESI.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+    s.value=cur!==''?cur:new Date().getMonth();
+  });
+}
+function initTipoSelects(){
+  document.getElementById('fTipo').innerHTML=tipi.map(t=>`<option value="${t.id}">${t.emoji} ${t.nome}</option>`).join('');
+  document.getElementById('rTipo').innerHTML='<option value="">— Tutte —</option>'+
+    tipi.map(t=>`<option value="${t.id}">${t.emoji} ${t.nome}</option>`).join('');
+  // precompila periodicità quando si cambia tipologia
+  document.getElementById('fTipo').onchange=function(){
+    const t=tipi.find(x=>x.id===this.value);
+    if(t&&t.periodo) document.getElementById('fPeriodo').value=t.periodo;
+  };
+}
+function initColorPicker(){
+  document.getElementById('colorPicker').innerHTML=
+    PALETTE.map(c=>`<div onclick="selColor('${c}')" title="${c}" style="width:24px;height:24px;border-radius:50%;background:${c};cursor:pointer;border:3px solid transparent;transition:border-color .15s"></div>`).join('');
+}
+function selColor(c){
+  document.getElementById('aColore').value=c;
+  document.querySelectorAll('#colorPicker div').forEach(d=>{d.style.border=d.title===c?'3px solid #fff':'3px solid transparent';});
+}
+
+// ══════════════════════════════════════════
+//  KPI + PILLS + TABLE
+// ══════════════════════════════════════════
+function renderKPI(){
+  const ann=speseDiAnno(currentYear);
+  const vis=filterMese==='all'?ann:ann.filter(s=>s.mese==filterMese);
+  const totAnno=ann.reduce((a,s)=>a+s.importo,0);
+  const totVis=vis.reduce((a,s)=>a+s.importo,0);
+  const g={};vis.forEach(s=>{g[s.tipoId]=(g[s.tipoId]||0)+s.importo;});
+  const topId=Object.entries(g).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  const top=topId?getTipo(topId):null;
+  document.getElementById('kpiGrid').innerHTML=`
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--accent)"></div>
+    <div class="kpi-lbl">💰 Totale ${filterMese==='all'?'Anno '+currentYear:MESI[filterMese]}</div>
+    <div class="kpi-val" style="color:var(--accent)">${fmt(totVis)}</div>
+    <div class="kpi-sub">${vis.length} voci</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--blue)"></div>
+    <div class="kpi-lbl">👨 Alessandro</div>
+    <div class="kpi-val" style="color:var(--blue)">${fmt(vis.filter(s=>s.persona==='Alessandro'||!s.persona).reduce((a,s)=>a+s.importo,0))}</div>
+    <div class="kpi-sub">${vis.filter(s=>s.persona==='Alessandro'||!s.persona).length} voci</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:#f06292"></div>
+    <div class="kpi-lbl">👩 Veronica</div>
+    <div class="kpi-val" style="color:#f06292">${fmt(vis.filter(s=>s.persona==='Veronica').reduce((a,s)=>a+s.importo,0))}</div>
+    <div class="kpi-sub">${vis.filter(s=>s.persona==='Veronica').length} voci</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--accent2)"></div>
+    <div class="kpi-lbl">🔥 Categoria top</div>
+    <div class="kpi-val" style="font-size:1.1rem;color:var(--accent2)">${top?top.emoji+' '+top.nome:'—'}</div>
+    <div class="kpi-sub">${top?fmt(g[topId]):''}</div></div>`;
+}
+
+function renderPills(){
+  let h=`<button class="mpill ${filterMese==='all'?'active':''}" onclick="setFilter('all')">Tutti</button>`;
+  MESI.forEach((m,i)=>{ h+=`<button class="mpill ${filterMese==i?'active':''}" onclick="setFilter(${i})">${m.substr(0,3)}</button>`; });
+  document.getElementById('monthPills').innerHTML=h;
+}
+function setFilter(v){ filterMese=v; renderPills(); renderTable(); renderKPI(); }
+
+function renderTable(){
+  const tbody=document.getElementById('speseBody');
+  const ann=speseDiAnno(currentYear);
+  const rows=filterMese==='all'?[...ann]:ann.filter(s=>s.mese==filterMese);
+  const totAnno=ann.reduce((a,s)=>a+s.importo,0);
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="9"><div class="empty">📋 Nessuna spesa per il ${currentYear}<br><small>Aggiungine una oppure carica i dati demo dalla scheda Admin</small></div></td></tr>`;
+    return;
+  }
+  const PERSONA_CFG={
+    'Alessandro': {emoji:'👨', col:'#5b9cf6'},
+    'Veronica':   {emoji:'👩', col:'#f06292'},
+    'Entrambi':   {emoji:'👫', col:'#4cbe8a'},
+  };
+  const sorted=[...rows].sort((a,b)=>a.mese-b.mese||a.ts-b.ts);
+  let track={};
+  tbody.innerHTML=sorted.map(s=>{
+    const t=getTipo(s.tipoId);
+    track[s.mese]=(track[s.mese]||0)+s.importo;
+    const pb=PERIODO_BADGE[s.periodo||'mensile']||PERIODO_BADGE.mensile;
+    const pc=PERSONA_CFG[s.persona]||PERSONA_CFG['Alessandro'];
+    return `<tr>
+      <td class="td-full" data-label="Mese"><strong>${MESI[s.mese]}</strong></td>
+      <td data-label="Tipologia"><span class="badge-cat" style="background:${t.colore}22;color:${t.colore}">${t.emoji} ${t.nome}</span></td>
+      <td data-label="Chi"><span class="badge-cat" style="background:${pc.col}22;color:${pc.col};font-size:.72rem">${pc.emoji} ${s.persona||'Alessandro'}</span></td>
+      <td class="td-full" data-label="Descrizione" style="color:var(--muted)">${s.desc||'—'}</td>
+      <td data-label="Periodicità"><span class="badge-cat" style="background:${pb.col}22;color:${pb.col};font-size:.72rem">${pb.label}</span></td>
+      <td data-label="Importo" class="v-red">${fmt(s.importo)}</td>
+      <td data-label="Mese tot." class="v-acc">${fmt(track[s.mese])}</td>
+      <td data-label="Anno tot." class="v-green">${fmt(totAnno)}</td>
+      <td class="td-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editSpesa('${s.id}')">✏️ Modifica</button>
+        <button class="btn-xs btn-xs-del"  onclick="delSpesa('${s.id}')">🗑️ Elimina</button>
+      </td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  CRUD SPESE
+// ══════════════════════════════════════════
+function addSpesa(){
+  const mese=parseInt(document.getElementById('fMese').value);
+  const tipoId=document.getElementById('fTipo').value;
+  const desc=document.getElementById('fDesc').value.trim();
+  const importo=parseFloat(document.getElementById('fImporto').value);
+  const periodo=document.getElementById('fPeriodo').value;
+  const persona=document.getElementById('fPersona').value;
+  if(!tipoId){toast('Seleziona una tipologia','var(--accent2)');return;}
+  if(!importo||importo<=0){toast('Inserisci un importo valido','var(--accent2)');return;}
+  if(!dbSpese[currentYear])dbSpese[currentYear]=[];
+  dbSpese[currentYear].push({id:uid(),mese,tipoId,desc,importo,periodo,persona,ts:Date.now()});
+  save();renderAll();
+  document.getElementById('fDesc').value='';
+  document.getElementById('fImporto').value='';
+  document.getElementById('fPeriodo').value='mensile';
+  toast('✅ Spesa aggiunta!');
+}
+function delSpesa(id){
+  if(!confirm('Eliminare questa spesa?'))return;
+  if(dbSpese[currentYear])dbSpese[currentYear]=dbSpese[currentYear].filter(s=>s.id!==id);
+  save();renderAll();toast('🗑️ Eliminata','var(--red)');
+}
+function editSpesa(id){
+  const s=speseDiAnno(currentYear).find(x=>x.id===id);if(!s)return;
+  document.getElementById('fMese').value=s.mese;
+  initTipoSelects();
+  document.getElementById('fTipo').value=s.tipoId;
+  document.getElementById('fDesc').value=s.desc;
+  document.getElementById('fImporto').value=s.importo;
+  document.getElementById('fPeriodo').value=s.periodo||'mensile';
+  document.getElementById('fPersona').value=s.persona||'Alessandro';
+  // rimuove silenziosamente senza confirm, il record viene ricreato al click su Aggiungi
+  if(dbSpese[currentYear]) dbSpese[currentYear]=dbSpese[currentYear].filter(x=>x.id!==id);
+  save(); renderAll();
+  toast('✏️ Caricata per modifica — modifica e clicca Aggiungi','var(--accent)');
+}
+
+// ══════════════════════════════════════════
+//  REPORT
+// ══════════════════════════════════════════
+function buildReport(){
+  const mi=parseInt(document.getElementById('rMese').value);
+  const tf=document.getElementById('rTipo').value;
+  let rows=speseDiAnno(currentYear).filter(s=>s.mese==mi);
+  if(tf)rows=rows.filter(s=>s.tipoId===tf);
+  const totM=rows.reduce((a,s)=>a+s.importo,0);
+  const g={};rows.forEach(s=>{g[s.tipoId]=(g[s.tipoId]||0)+s.importo;});
+  const top=Object.entries(g).sort((a,b)=>b[1]-a[1])[0];
+  const topT=top?getTipo(top[0]):null;
+
+  document.getElementById('kpiReport').innerHTML=`
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--accent)"></div>
+    <div class="kpi-lbl">💰 ${MESI[mi]} ${currentYear}</div>
+    <div class="kpi-val" style="color:var(--accent)">${fmt(totM)}</div>
+    <div class="kpi-sub">${rows.length} voci</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--accent2)"></div>
+    <div class="kpi-lbl">🔥 Spesa principale</div>
+    <div class="kpi-val" style="font-size:1.1rem;color:var(--accent2)">${topT?topT.emoji+' '+topT.nome:'—'}</div>
+    <div class="kpi-sub">${top?fmt(top[1]):''}</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--green)"></div>
+    <div class="kpi-lbl">📅 Totale anno ${currentYear}</div>
+    <div class="kpi-val" style="color:var(--green)">${fmt(speseDiAnno(currentYear).reduce((a,s)=>a+s.importo,0))}</div></div>`;
+
+  const pL=Object.keys(g).map(id=>getTipo(id).nome);
+  const pD=Object.values(g);
+  const pC=Object.keys(g).map(id=>getTipo(id).colore);
+
+  killChart('pie');
+  charts.pie=new Chart(document.getElementById('chartPie'),{
+    type:'doughnut',
+    data:{labels:pL,datasets:[{data:pD,backgroundColor:pC,borderColor:'#0d1117',borderWidth:3}]},
+    options:{plugins:{legend:{labels:{color:CO.color,font:{family:CO.font,size:11}}},
+      tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)} (${totM?((ctx.raw/totM)*100).toFixed(1):'0'}%)`}}}}
+  });
+
+  killChart('bar');
+  charts.bar=new Chart(document.getElementById('chartBar'),{
+    type:'bar',
+    data:{labels:pL,datasets:[{label:'€',data:pD,backgroundColor:pC,borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{
+      x:{ticks:{color:CO.color,font:{family:CO.font}},grid:{color:CO.grid}},
+      y:{ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}
+  });
+
+  killChart('line');
+  const lD=MESI.map((_,i)=>speseDiAnno(currentYear).filter(s=>s.mese===i).reduce((a,s)=>a+s.importo,0));
+  charts.line=new Chart(document.getElementById('chartLine'),{
+    type:'line',
+    data:{labels:MESI.map(m=>m.substr(0,3)),datasets:[{
+      label:`Spese ${currentYear}`,data:lD,
+      borderColor:'#f6c544',backgroundColor:'rgba(246,197,68,.1)',
+      pointBackgroundColor:'#f6c544',tension:.4,fill:true}]},
+    options:{plugins:{legend:{labels:{color:CO.color,font:{family:CO.font}}}},scales:{
+      x:{ticks:{color:CO.color,font:{family:CO.font}},grid:{color:CO.grid}},
+      y:{ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}
+  });
+
+  const sorted=Object.entries(g).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0]?.[1]||1;
+  document.getElementById('topBars').innerHTML=sorted.length
+    ?sorted.map(([id,val])=>{
+        const t=getTipo(id);const pct=((val/totM)*100).toFixed(1);
+        return `<div class="prog-row">
+          <div class="prog-lbl">${t.emoji} ${t.nome}</div>
+          <div class="prog-track"><div class="prog-fill" style="width:${(val/max)*100}%;background:${t.colore}"></div></div>
+          <div class="prog-val" style="color:${t.colore}">${fmt(val)}</div>
+          <div class="prog-pct">${pct}%</div></div>`;
+      }).join('')
+    :'<div style="color:var(--muted);padding:.5rem">Nessun dato per questo mese</div>';
+}
+
+// ══════════════════════════════════════════
+//  STORICO
+// ══════════════════════════════════════════
+function renderStorico(){
+  const anni=anniUsati();
+  const tutto=tutteLeSpese();
+  const totAll=tutto.reduce((a,s)=>a+s.importo,0);
+  const anniDati=anni.filter(y=>speseDiAnno(y).length>0);
+  const media=anniDati.length?totAll/anniDati.length:0;
+
+  document.getElementById('kpiStorico').innerHTML=`
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--accent)"></div>
+    <div class="kpi-lbl">🌍 Totale storico</div>
+    <div class="kpi-val" style="color:var(--accent)">${fmt(totAll)}</div>
+    <div class="kpi-sub">${anniDati.length} anni con dati</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--green)"></div>
+    <div class="kpi-lbl">📊 Media annuale</div>
+    <div class="kpi-val" style="color:var(--green)">${fmt(media)}</div></div>
+  <div class="kpi"><div class="kpi-stripe" style="background:var(--blue)"></div>
+    <div class="kpi-lbl">📅 Anno attivo</div>
+    <div class="kpi-val" style="color:var(--blue)">${currentYear}</div>
+    <div class="kpi-sub">Usa ‹ › in alto per cambiare</div></div>`;
+
+  document.getElementById('historyGrid').innerHTML=anni.map(y=>{
+    const tot=speseDiAnno(y).reduce((a,s)=>a+s.importo,0);
+    const isCur=y===currentYear;
+    return `<div class="hist-card ${isCur?'cur-year':''}" onclick="jumpYear(${y})">
+      <div class="hist-year">${y}${isCur?' ★':''}</div>
+      <div class="hist-n">${speseDiAnno(y).length} voci</div>
+      <div class="hist-amt">${fmt(tot)}</div></div>`;
+  }).join('');
+
+  killChart('storico');
+  const ds=tipi.map(t=>{
+    const data=anni.map(y=>speseDiAnno(y).filter(s=>s.tipoId===t.id).reduce((a,s)=>a+s.importo,0));
+    return{label:t.emoji+' '+t.nome,data,backgroundColor:t.colore+'bb',borderColor:t.colore,borderWidth:1,borderRadius:4};
+  }).filter(d=>d.data.some(v=>v>0));
+
+  if(ds.length){
+    charts.storico=new Chart(document.getElementById('chartStorico'),{
+      type:'bar',
+      data:{labels:anni.map(String),datasets:ds},
+      options:{plugins:{legend:{labels:{color:CO.color,font:{family:CO.font,size:11}}}},
+        scales:{
+          x:{stacked:true,ticks:{color:CO.color,font:{family:CO.font}},grid:{color:CO.grid}},
+          y:{stacked:true,ticks:{color:CO.color,font:{family:CO.font},callback:v=>fmt(v)},grid:{color:CO.grid}}}}
+    });
+  } else {
+    document.getElementById('chartStorico').insertAdjacentHTML('afterend','<div class="empty">Inserisci dati in più anni per vedere il confronto</div>');
+  }
+}
+
+function jumpYear(y){
+  currentYear=y;
+  document.getElementById('yearDisplay').textContent=currentYear;
+  filterMese='all';
+  switchTab('spese',document.querySelector('.ntab'));
+}
+
+// ══════════════════════════════════════════
+//  ADMIN TIPI
+// ══════════════════════════════════════════
+const PERIODO_BADGE={
+  mensile:       {label:'Mensile',        col:'#5b9cf6'},
+  bimestrale:    {label:'Bimestrale',     col:'#4cbe8a'},
+  trimestrale:   {label:'Trimestrale',    col:'#f6c544'},
+  quadrimestrale:{label:'Quadrimestrale', col:'#e07b39'},
+  semestrale:    {label:'Semestrale',     col:'#a78bfa'},
+  annuale:       {label:'Annuale',        col:'#e05c5c'},
+  occasionale:   {label:'Occasionale',    col:'#6b7694'},
+};
+
+function renderTipoList(){
+  document.getElementById('tipoList').innerHTML=tipi.map(t=>{
+    const pb=PERIODO_BADGE[t.periodo||'mensile']||PERIODO_BADGE.mensile;
+    return `<li class="tipo-li">
+    <div class="tipo-info">
+      <div class="cdot" style="background:${t.colore}"></div>
+      <span style="font-size:1.1rem">${t.emoji}</span>
+      <span style="font-weight:500">${t.nome}</span>
+      <span class="badge-cat" style="background:${pb.col}22;color:${pb.col};font-size:.7rem;margin-left:.3rem">${pb.label}</span>
+    </div>
+    <div class="d-flex gap-1">
+      <button class="btn-xs btn-xs-edit" onclick="editTipo('${t.id}')">✏️</button>
+      <button class="btn-xs btn-xs-del"  onclick="delTipo('${t.id}')">🗑️</button>
+    </div></li>`;
+  }).join('');
+}
+function saveTipo(){
+  const nome=document.getElementById('aNome').value.trim();
+  const emoji=document.getElementById('aEmoji').value.trim()||'📌';
+  const col=document.getElementById('aColore').value;
+  const periodo=document.getElementById('aPeriodo').value;
+  if(!nome){toast('Inserisci un nome','var(--accent2)');return;}
+  if(editTipoId){
+    const t=tipi.find(x=>x.id===editTipoId);
+    if(t){t.nome=nome;t.emoji=emoji;t.colore=col;t.periodo=periodo;}
+    editTipoId=null;
+  }else{tipi.push({id:uid(),nome,emoji,colore:col,periodo});}
+  save();renderTipoList();initTipoSelects();resetTipoForm();toast('✅ Tipologia salvata!');
+}
+function editTipo(id){
+  const t=tipi.find(x=>x.id===id);if(!t)return;
+  editTipoId=id;
+  document.getElementById('aNome').value=t.nome;
+  document.getElementById('aEmoji').value=t.emoji;
+  document.getElementById('aColore').value=t.colore;
+  document.getElementById('aPeriodo').value=t.periodo||'mensile';
+  document.getElementById('saveTipoLbl').textContent='Aggiorna Tipologia';
+  document.getElementById('cancelTipoBtn').style.display='inline-flex';
+  document.getElementById('adminFormTitle').textContent='Modifica Tipologia';
+  toast('✏️ Caricata per modifica','var(--accent)');
+}
+function delTipo(id){
+  if(tutteLeSpese().some(s=>s.tipoId===id)){toast('⚠️ Categoria in uso','var(--red)');return;}
+  if(!confirm('Eliminare questa tipologia?'))return;
+  tipi=tipi.filter(t=>t.id!==id);
+  save();renderTipoList();initTipoSelects();toast('🗑️ Eliminata','var(--red)');
+}
+function resetTipoForm(){
+  editTipoId=null;
+  ['aNome','aEmoji'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aColore').value='#f6c544';
+  document.getElementById('aPeriodo').value='mensile';
+  document.getElementById('saveTipoLbl').textContent='Salva Tipologia';
+  document.getElementById('cancelTipoBtn').style.display='none';
+  document.getElementById('adminFormTitle').textContent='Nuova Tipologia';
+  document.querySelectorAll('#colorPicker div').forEach(d=>{d.style.border='3px solid transparent';});
+}
+
+// ══════════════════════════════════════════
+//  DATI
+// ══════════════════════════════════════════
+function esportaCSV(){
+  const rows=speseDiAnno(currentYear).map(s=>`${currentYear},${MESI[s.mese]},${getTipo(s.tipoId).nome},"${s.desc||''}",${s.importo},${s.periodo||'mensile'}`);
+  const csv='Anno,Mese,Tipologia,Descrizione,Importo,Periodicità\n'+rows.join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`spese_${currentYear}.csv`;a.click();
+  toast('📄 CSV esportato!');
+}
+
+function esportaJSON(){
+  const backup={
+    versione: 2,
+    esportato: new Date().toISOString(),
+    tipi,
+    spese: dbSpese
+  };
+  const json=JSON.stringify(backup, null, 2);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.download=`familybudget_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('💾 Backup JSON scaricato!');
+}
+
+function importaJSON(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.spese && !data.tipi) throw new Error('Formato non valido');
+      if(!confirm(`Importare il backup del ${data.esportato ? new Date(data.esportato).toLocaleDateString('it-IT') : '?'}?\nI dati attuali verranno sovrascritti.`)){
+        input.value=''; return;
+      }
+      if(data.tipi)  tipi    = data.tipi;
+      if(data.spese) dbSpese = data.spese;
+      save(); renderAll();
+      toast('✅ Backup ripristinato con successo!');
+    } catch(err){
+      toast('❌ File non valido o corrotto','var(--red)');
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+function svuotaAnno(){
+  if(!confirm(`Eliminare tutte le spese del ${currentYear}?`))return;
+  delete dbSpese[currentYear];save();renderAll();toast('🗑️ Anno svuotato','var(--red)');
+}
+function svuotaTutto(){
+  if(!confirm('Eliminare TUTTI i dati di tutti gli anni?\nQuesta azione è irreversibile!'))return;
+  dbSpese={};save();renderAll();toast('⚠️ Tutto eliminato','var(--red)');
+}
+function importaDemo(){
+  if(!dbSpese[currentYear])dbSpese[currentYear]=[];
+  const d=[
+    {mese:0,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
+    {mese:0,tipoId:'t2',desc:'Spesa settimanale',importo:130,periodo:'mensile'},
+    {mese:0,tipoId:'t3',desc:'Benzina',importo:90,periodo:'mensile'},
+    {mese:0,tipoId:'t7',desc:'Luce + Gas',importo:175,periodo:'bimestrale'},
+    {mese:1,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
+    {mese:1,tipoId:'t2',desc:'Spesa mensile',importo:490,periodo:'mensile'},
+    {mese:1,tipoId:'t4',desc:'Farmacia',importo:55,periodo:'occasionale'},
+    {mese:1,tipoId:'t6',desc:'Cinema + uscite',importo:80,periodo:'occasionale'},
+    {mese:2,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
+    {mese:2,tipoId:'t2',desc:'Spesa mensile',importo:510,periodo:'mensile'},
+    {mese:2,tipoId:'t3',desc:'Revisione auto',importo:220,periodo:'annuale'},
+    {mese:2,tipoId:'t5',desc:'Libri scuola',importo:90,periodo:'annuale'},
+    {mese:3,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
+    {mese:3,tipoId:'t2',desc:'Spesa mensile',importo:480,periodo:'mensile'},
+    {mese:3,tipoId:'t7',desc:'Internet + TV',importo:65,periodo:'mensile'},
+    {mese:3,tipoId:'t6',desc:'Vacanza Pasqua',importo:420,periodo:'occasionale'},
+    {mese:4,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
+    {mese:4,tipoId:'t2',desc:'Spesa mensile',importo:500,periodo:'mensile'},
+    {mese:4,tipoId:'t4',desc:'Visita medico',importo:120,periodo:'quadrimestrale'},
+    {mese:5,tipoId:'t1',desc:'Affitto / Mutuo',importo:850,periodo:'mensile'},
+    {mese:5,tipoId:'t2',desc:'Spesa mensile',importo:470,periodo:'mensile'},
+    {mese:5,tipoId:'t6',desc:'Concerto',importo:90,periodo:'occasionale'},
+    {mese:5,tipoId:'t3',desc:'Assicurazione auto',importo:380,periodo:'semestrale'},
+  ];
+  dbSpese[currentYear].push(...d.map(x=>({...x,id:uid(),ts:Date.now()})));
+  save();renderAll();toast('⭐ Dati demo caricati!','var(--accent)');
+}
+
+// ══════════════════════════════════════════
+//  TAB SWITCH
+// ══════════════════════════════════════════
+function switchTab(name,btn){
+  ['spese','report','storico','admin'].forEach(id=>{
+    document.getElementById('tab-'+id).style.display=id===name?'block':'none';
+  });
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(name==='report')buildReport();
+  if(name==='storico'){killChart('storico');renderStorico();}
+}
+
+// ══════════════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════════════
+function renderAll(){
+  document.getElementById('yearDisplay').textContent=currentYear;
+  renderKPI();renderPills();renderTable();renderTipoList();initTipoSelects();
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  initMeseSelects();initColorPicker();
+  await loadData();          // carica da Google Sheets (o cache locale)
+  initTipoSelects();
+  renderAll();
+});
+</script>
+</body>
+</html>
